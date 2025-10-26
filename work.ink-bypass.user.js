@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         work.ink bypass
 // @namespace    http://tampermonkey.net/
-// @version      2025-10-24
+// @version      2025-10-26
 // @description  bypasses work.ink shortened links
 // @author       IHaxU
 // @match        https://work.ink/*
@@ -287,7 +287,14 @@
             const payload = args[0];
             log("Link destination received:", payload);
 
-            startCountdown(payload.url, 30);
+            const waitTimeSeconds = 30;
+            const secondsPassed = (Date.now() - startTime) / 1000;
+
+            if (secondsPassed >= waitTimeSeconds) {
+                redirect(payload.url);
+            } else {
+                startCountdown(payload.url, waitTimeSeconds - secondsPassed);
+            }
 
             return _onLinkDestination.apply(this, args);
         };
@@ -450,6 +457,9 @@
 
     // Initialize the bypass
     setupSvelteKitInterception();
+
+    // Patched in 2 cpu cycles atp
+    unsafeWindow.window.googletag = {cmd: [], _loaded_: true};
 
     // Remove injected ads
     const observer = new MutationObserver((mutations) => {
