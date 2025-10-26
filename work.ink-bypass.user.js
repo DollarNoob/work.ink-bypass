@@ -287,14 +287,7 @@
             const payload = args[0];
             log("Link destination received:", payload);
 
-            const waitTimeSeconds = 30;
-            const secondsPassed = (Date.now() - startTime) / 1000;
-
-            if (secondsPassed >= waitTimeSeconds) {
-                redirect(payload.url);
-            } else {
-                startCountdown(payload.url, waitTimeSeconds - secondsPassed);
-            }
+            startCountdown(payload.url, 30);
 
             return _onLinkDestination.apply(this, args);
         };
