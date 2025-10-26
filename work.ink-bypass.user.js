@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         work.ink bypass
 // @namespace    http://tampermonkey.net/
-// @version      2025-10-26
+// @version      2025-10-26.1
 // @description  bypasses work.ink shortened links
 // @author       IHaxU
 // @match        https://work.ink/*
@@ -459,22 +459,54 @@
     setupSvelteKitInterception();
 
     // Patched in 2 cpu cycles atp
-    unsafeWindow.window.googletag = {cmd: [], _loaded_: true};
+    window.googletag = {cmd: [], _loaded_: true};
+
+    // Define blocked ad classes and ids
+    const blockedClasses = [
+        "adsbygoogle",
+        "adsense-wrapper",
+        "inline-ad",
+        "gpt-billboard-container"
+    ];
+
+    const blockedIds = [
+        "billboard-1",
+        "billboard-2",
+        "billboard-3",
+        "sidebar-ad-1",
+        "skyscraper-ad-1"
+    ];
 
     // Remove injected ads
     const observer = new MutationObserver((mutations) => {
         for (const m of mutations) {
             for (const node of m.addedNodes) {
                 if (node.nodeType === 1) {
-                    // Direct match
-                    if (node.classList?.contains("adsbygoogle")) {
-                        node.remove();
-                        log("Removed injected ad:", node);
-                    }
-                    // Or children inside the node
-                    node.querySelectorAll?.(".adsbygoogle").forEach((el) => {
-                        el.remove();
-                        log("Removed nested ad:", el);
+                    // Block by class
+                    blockedClasses.forEach((cls) => {
+                        // Direct match
+                        if (node.classList?.contains(cls)) {
+                            node.remove();
+                            log("Removed injected ad by class:", node);
+                        }
+                        // Or children inside the node
+                        node.querySelectorAll?.(`.${cls}`).forEach((el) => {
+                            el.remove();
+                            log("Removed nested ad:", el);
+                        });
+                    });
+                    // Block by id
+                    blockedIds.forEach((id) => {
+                        // Direct match
+                        if (node.id === id) {
+                            node.remove();
+                            log("Removed injected ad by id:", node);
+                        }
+                        // Or children inside the node
+                        node.querySelectorAll?.(`#${id}`).forEach((el) => {
+                            el.remove();
+                            log("Removed nested ad:", el);
+                        });
                     });
                 }
             }
