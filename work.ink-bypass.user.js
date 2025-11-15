@@ -424,15 +424,12 @@
             if (!intercepted) {
                 return await new Promise((resolve) => {
                     result.then(([kit, app, ...args]) => {
-                        if (!("start" in kit)) {
-                            return resolve([kit, app, ...args]);
-                        }
-
-                        intercepted = true;
                         log("SvelteKit modules loaded");
 
                         const [success, wrappedKit] = createKitProxy(kit);
                         if (success) {
+                            intercepted = true;
+
                             // Restore original Promise.all
                             Promise.all = originalPromiseAll;
 
